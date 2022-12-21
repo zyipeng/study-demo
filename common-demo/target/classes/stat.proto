@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package com.zhouyp.demo.proto.RtaStat;
+
+//*********重要*********
+//统计数据现在主要用于内部排障，设计时没有容灾没有正确性承诺。仅用于人工数据观察，千万不要用在自动控制上。
+//*********重要*********
+
+message DB {
+    map<string, Table> Tables = 1;            //表格，Key为Table名，Value为具体的Table内容
+    int64 Timestamp = 2;                      //起始时间戳，Unix Timestamp的整型秒，两次发起的请求时间戳范围可能会有重叠，请使用新的覆盖老的
+    int64 Interval = 3;                       //每个Value的间隔，单位秒。例如分钟级的统计，该值为60。对于每个Value，其隐含代表的时间戳为 Timestamp + (n * Interval)。n=0 to len()-1；
+}
+
+message Table {
+	map<string, Values> Fields = 1;      //Key为Field名称，Value为Field的值集合
+}
+
+message Values{
+    repeated int64 Value = 1;                 //测量点的数值，每Interval一个值。如实际该时间点无值，仍然会填入0
+}
+
+//上报信息通过HTTP Post实现
+
+//Table名称样例，一般来说有相关计算关系的字段会集合放到一个Table中
+//request_tj 天津数据
+//request_sh 上海数据
+//request_s的 深圳数据
+
+//Field名称样例
+//request_count 请求数，除60可获得qps数，以下参数中，以req/res开头的字段，均是request_count的子集
+//qps_filted_count QPS过滤数，独立于request的计数，指因QPS控制而未发送给RTA DSP的请求数
+//time_cost_ms_count 耗时累加，毫秒，可通过除以request_count获得平均耗时
+
+//以下为request_count的子集，即在请求发出后产生的各种情况的统计结果
+
+//req_timeout_count 超时数，可通过除以request_count获得超时率
+//req_err_count 发送失败，网络错误等原因请求没有正确发出去
+//res_reject_count code为“非0”拒绝数，可通过除以request_count获得拒绝率
+//res_accept_count code为“0”的数量
+//res_http_header_err_count 接收失败，HTTP status code或Header不对(按YES处理，但不缓存)
+//res_nobody_err_count 接收失败，无Body(按YES处理，但不缓存)
+//res_bodyparse_err_count 接收失败，Body解析失败(按YES处理，但不缓存)
+//res_nocode_error_count 接收失败，无code(按YES处理，但不缓存)
+//res_not_uid_owner_count 非法的UID数，指回复了未在腾讯RTA系统绑定的广告主ID
+

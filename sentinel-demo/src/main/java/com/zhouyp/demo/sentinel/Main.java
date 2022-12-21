@@ -1,0 +1,50 @@
+/*
+ * frxs Inc.  湖南兴盛优选电子商务有限公司.
+ * Copyright (c) 2017-2021. All Rights Reserved.
+ */
+package com.zhouyp.demo.sentinel;
+
+import com.alibaba.csp.sentinel.Entry;
+import com.alibaba.csp.sentinel.SphU;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
+import com.alibaba.csp.sentinel.slots.block.RuleConstant;
+import com.alibaba.csp.sentinel.slots.block.flow.FlowRule;
+import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * <B>主类名称：</B>Main<BR>
+ * <B>概要说明：</B> TODO <BR>
+ *
+ * @author 周毅鹏
+ * @since 2022/9/5 下午 5:19
+ */
+public class Main {
+    public static void main(String[] args) {
+        // 配置规则.
+        initFlowRules();
+
+        while (true) {
+            // 1.5.0 版本开始可以直接利用 try-with-resources 特性
+            try (Entry entry = SphU.entry("HelloWorld")) {
+                // 被保护的逻辑
+                System.out.println("hello world");
+            } catch (BlockException ex) {
+                // 处理被流控的逻辑
+//                System.out.println("blocked!");
+            }
+        }
+    }
+    private static void initFlowRules(){
+        List<FlowRule> rules = new ArrayList<>();
+        FlowRule rule = new FlowRule();
+        rule.setResource("HelloWorld");
+        rule.setGrade(RuleConstant.FLOW_GRADE_QPS);
+        // Set limit QPS to 20.
+        rule.setCount(20);
+        rules.add(rule);
+        FlowRuleManager.loadRules(rules);
+    }
+}
