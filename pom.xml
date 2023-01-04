@@ -13,6 +13,7 @@
         <module>spring-batch-demo</module>
         <module>kafka-demo</module>
         <module>sentinel-demo</module>
+        <module>es-demo</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>
